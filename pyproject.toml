@@ -1,0 +1,16 @@
+[project]
+name = "endfield-trade"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "customtkinter>=5.2.2",
+    "keyboard>=0.13.5",
+    "opencv-python-headless>=4.13.0.90",
+    "pillow>=12.1.0",
+    "pyautogui>=0.9.54",
+    "pygetwindow>=0.0.9",
+    "pyinstaller>=6.18.0",
+    "pywin32>=311",
+]

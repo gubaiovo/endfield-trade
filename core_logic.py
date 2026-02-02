@@ -2,6 +2,8 @@ import pyautogui
 import time
 import os
 import config
+import winsound
+import ctypes
 from PIL import ImageGrab
 import numpy as np
 import cv2
@@ -116,3 +118,14 @@ def run_job(stop_check_func):
         pyautogui.click()
     else:
         log("未发现高利润物资")
+    try:
+        winsound.MessageBeep(winsound.MB_OK) 
+        log("提示音播放完毕")
+    except Exception as e:
+        log(f"提示音播放失败: {e}")
+    popup_title = "任务完成"
+    if results:
+        popup_text = f"已找到最佳利润物资：\n{best['name']}\n差价: {best['diff']}"
+    else:
+        popup_text = "本次扫描未发现高利润物资"
+    ctypes.windll.user32.MessageBoxW(0, popup_text, popup_title, 0x40 | 0x1000)

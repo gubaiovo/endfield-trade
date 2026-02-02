@@ -1,3 +1,4 @@
+import math
 import pyautogui
 import time
 import os
@@ -13,6 +14,40 @@ from recognizers import NumberRecognizer, NameRecognizer, find_grid_points
 scanner_my = NumberRecognizer(os.path.join("img", "numbers", "m"))
 scanner_market = NumberRecognizer(os.path.join("img", "numbers", "o"))
 scanner_name = NameRecognizer()
+_last_safe_pos = None
+def init_mouse_safety():
+    """初始化鼠标位置记录"""
+    global _last_safe_pos
+    _last_safe_pos = pyautogui.position()
+
+def check_interference(threshold=10):
+    global _last_safe_pos
+    if _last_safe_pos is None:
+        _last_safe_pos = pyautogui.position()
+        return False
+        
+    current_x, current_y = pyautogui.position()
+    last_x, last_y = _last_safe_pos
+    dist = math.hypot(current_x - last_x, current_y - last_y)
+    
+    if dist > threshold:
+        log(f"⚠️ 检测到鼠标人为移动 (距离: {int(dist)}px)，任务停止")
+        return True
+    return False
+
+def safe_moveTo(x, y, duration=0.1):
+    global _last_safe_pos
+    if check_interference(): return False
+    pyautogui.moveTo(x, y, duration=duration)
+    _last_safe_pos = (x, y)
+    return True
+
+def safe_click():
+    global _last_safe_pos
+    if check_interference(): return False
+    pyautogui.click()
+    _last_safe_pos = pyautogui.position()
+    return True
 
 def identify_current_region_full_screen(win_x, win_y, win_w, win_h):
     screenshot = ImageGrab.grab(bbox=(win_x, win_y, win_x + win_w, win_y + win_h))
@@ -42,7 +77,7 @@ def identify_current_region_full_screen(win_x, win_y, win_w, win_h):
 
 def run_job(stop_check_func):
     log("\n>>> 任务已启动")
-    
+    init_mouse_safety()
     coords = get_window_coordinates() 
     if not coords or coords[0] is None:
         log(f"❌ 未找到窗口: {config.GAME_WINDOW_TITLE}")
@@ -64,6 +99,7 @@ def run_job(stop_check_func):
     
     marker_name = zone_config.get("marker", "")
     y_filter = zone_config.get("y_filter", 0)
+    max_count = zone_config.get("count", 30)
     marker_path = os.path.join("img", "ui", marker_name)
     
     log(f"正在扫描网格... (Anchor: {marker_name})")
@@ -76,37 +112,56 @@ def run_job(stop_check_func):
     grid_points = find_grid_points(game_screen, marker_path, y_limit=y_filter)
     
     total = len(grid_points)
-    log(f"🔍 找到 {total} 个商品")
+    log(f"🔍 找到 {total} 个商品 (配置上限: {max_count})")
     if total == 0: return
 
     results = []
     
     for i, (rel_x, rel_y) in enumerate(grid_points):
         if stop_check_func(): break
-        pyautogui.moveTo(win_x + rel_x, win_y + rel_y, duration=0.1)
-        pyautogui.click()
+        if i >= max_count:
+            log(f"已达到配置数量上限 ({max_count})，停止扫描后续物资")
+            break
+        
+        target_x = win_x + rel_x
+        target_y = win_y + rel_y
+
+        if not safe_moveTo(target_x, target_y, duration=0.1):
+            ctypes.windll.user32.MessageBoxW(0, "检测到鼠标移动，任务已强制停止。", "安全中断", 0x30 | 0x1000)
+            return
+        
+        if not safe_click():
+            ctypes.windll.user32.MessageBoxW(0, "检测到鼠标移动，任务已强制停止。", "安全中断", 0x30 | 0x1000)
+            return
+        
         time.sleep(0.5)
+        
         item_name = scanner_name.identify(capture_rect(base_x, base_y, config.AREA_ITEM_NAME))
         my_price = scanner_my.identify(capture_rect(base_x, base_y, config.AREA_MY_PRICE))
         
-        pyautogui.moveTo(base_x + config.BTN_SWITCH_MARKET_X, base_y + config.BTN_SWITCH_MARKET_Y, duration=0.1)
-        pyautogui.click()
-        time.sleep(0.8)
-        top_price = scanner_market.identify(capture_rect(base_x, base_y, config.AREA_MARKET_PRICE))
+        if not safe_moveTo(base_x + config.BTN_SWITCH_MARKET_X, base_y + config.BTN_SWITCH_MARKET_Y, duration=0.1):
+            ctypes.windll.user32.MessageBoxW(0, "检测到鼠标移动，任务已强制停止。", "安全中断", 0x30 | 0x1000)
+            return
         
+        if not safe_click(): 
+            return
+        
+        time.sleep(0.8)
+        
+        top_price = scanner_market.identify(capture_rect(base_x, base_y, config.AREA_MARKET_PRICE))
         diff = top_price - my_price
         log(f"[{i+1}] {item_name}: 自{my_price} -> 卖{top_price} | 差{diff}")
         
         if my_price > 0 and top_price > 0:
             results.append({"name": item_name, "diff": diff, "pos": (win_x + rel_x, win_y + rel_y)})
-            
-        pyautogui.moveTo(base_x + config.BTN_CLOSE_X, base_y + config.BTN_CLOSE_Y, duration=0.1)
-        pyautogui.click()
-        
+        if not safe_moveTo(base_x + config.BTN_CLOSE_X, base_y + config.BTN_CLOSE_Y, duration=0.1):
+             ctypes.windll.user32.MessageBoxW(0, "检测到鼠标移动，任务已强制停止。", "安全中断", 0x30 | 0x1000)
+             return
+         
+        if not safe_click(): return
         time.sleep(0.3)
         if stop_check_func(): return
-        
-        pyautogui.click()
+        if not safe_click(): return
         time.sleep(0.3)
         
     log("\n<<< 任务结束 >>>")
@@ -114,8 +169,12 @@ def run_job(stop_check_func):
     if results:
         best = sorted(results, key=lambda x: x['diff'], reverse=True)[0]
         log(f"最佳: {best['name']} (差价 {best['diff']})")
-        pyautogui.moveTo(best['pos'][0], best['pos'][1], duration=0)
-        pyautogui.click()
+        if not safe_moveTo(best['pos'][0], best['pos'][1], duration=0.2):
+             ctypes.windll.user32.MessageBoxW(0, "检测到鼠标移动，停止操作", "安全中断", 0x30 | 0x1000)
+             return
+        time.sleep(0.3)
+        if not safe_click(): return
+        log(f"已自动点击: {best['name']}")
     else:
         log("未发现高利润物资")
     try:

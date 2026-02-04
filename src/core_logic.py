@@ -104,7 +104,7 @@ def run_job(stop_signal):
         safe_move(*best['pos'])
         time.sleep(0.2)
         safe_click()
-        msg = f"最佳物品: {best['name']}\n利润: {best['diff']}\n点击确定前往"
+        msg = f"最佳物品: {best['name']}\n利润: {best['diff']}"
         ctypes.windll.user32.MessageBoxW(0, msg, "完成", 0x40 | 0x1000)
     else:
         log("未发现有利润物资")

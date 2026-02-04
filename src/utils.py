@@ -9,6 +9,7 @@ import win32gui, win32con
 from PIL import ImageGrab
 from datetime import datetime
 import config
+import ctypes
 
 ui_callback = None
 
@@ -44,9 +45,11 @@ def safe_action(func, *args, **kwargs):
     
     cur_x, cur_y = pyautogui.position()
     last_x, last_y = _last_safe_pos
-    
-    if math.hypot(cur_x - last_x, cur_y - last_y) > 50:
-        log("⚠️ 检测到鼠标人为移动，任务停止！")
+    dist = math.hypot(cur_x - last_x, cur_y - last_y)
+    if dist > 50:
+        msg = f"⚠️ 检测到鼠标人为移动，任务停止\n距离上次鼠标位置：{dist}px"
+        log(msg)
+        ctypes.windll.user32.MessageBoxW(0, msg, "安全中断", 0x40 | 0x1000)
         return False
 
     func(*args, **kwargs)

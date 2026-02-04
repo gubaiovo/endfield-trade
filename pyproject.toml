@@ -1,0 +1,17 @@
+[project]
+name = "ocr-test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "customtkinter>=5.2.2",
+    "keyboard>=0.13.5",
+    "onnxruntime>=1.23.2",
+    "openvino>=2025.4.1",
+    "pyautogui>=0.9.54",
+    "pyinstaller>=6.18.0",
+    "pywin32>=311",
+    "rapidocr>=3.6.0",
+    "wx-ocr>=0.1.6",
+]

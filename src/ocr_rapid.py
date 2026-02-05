@@ -1,3 +1,4 @@
+from doctest import debug
 import numpy as np
 import re
 from rapidocr import RapidOCR, EngineType
@@ -15,6 +16,21 @@ try:
 except Exception as e:
     print(f"OpenVINO 引擎初始化失败: {e}")
     engine = RapidOCR()
+
+def _parse_price(text):
+    if any(c in text for c in ['%', 'UID', ':', '+', '-']): 
+        return None
+    if '/' in text:
+        return None
+    clean_text = text.replace(',', '').strip()
+    nums = re.findall(r'\d+', clean_text)
+    
+    if nums:
+        val = int(max(nums, key=len))
+        if 100 <= val <= 10000:
+            return val
+            
+    return None
 
 def check_text_exists(keyword, region=None):
     ocr_result, _ = scan_raw_object(region)
@@ -66,15 +82,33 @@ def get_price_from_list(text_list, keywords):
 
 def get_market_max_from_list(text_list):
     prices = []
-    for text in text_list:
-        if any(c in text for c in ['%', 'UID', '/', ':', '+', '-']): continue
-        
-        if text.isdigit():
-            val = int(text)
-            if 100 <= val <= 99999:
-                prices.append(val)
     
-    return max(prices) if prices else 0
+    if config.DEBUG_MODE:
+        log(f"--- 市场扫描原始数据 ({len(text_list)}条) ---")
+        log(str(text_list))
+
+    for i, text in enumerate(text_list):
+        if '#' in text:
+            if re.search(r'#\d+', text):
+                if i + 1 < len(text_list):
+                    next_text = text_list[i+1]
+                    price = _parse_price(next_text)
+                    if price:
+                        prices.append(price)
+                        if config.DEBUG_MODE:
+                            log(f"命中 [{text}] -> 提取价格: {price}")
+                        continue
+        price = _parse_price(text)
+        if price:
+            prices.append(price)
+    if not prices:
+        return 0
+    max_val = max(prices)
+    if config.DEBUG_MODE:
+        log(f"有效价格池: {prices}")
+        log(f"最终最高价: {max_val}")
+    
+    return max_val
 
 def click_text(keyword, region=None, cached_result=None, offset=(0,0)):
     if cached_result is None:

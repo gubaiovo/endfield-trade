@@ -42,6 +42,9 @@ def run_job(stop_signal):
         detail_area = (win_x + win_w//3, win_y, win_w*2//3, win_h)
 
         raw_obj, offset = ocr_rapid.scan_raw_object(detail_area)
+        
+        # raw_obj.vis(f"raw_obj_{i}.png")
+        
         text_list = ocr_rapid.extract_texts_from_result(raw_obj)
         
         my_price = ocr_rapid.get_price_from_list(text_list, ["今日售价", "单价", "成本", "售价", "调度卷"])
@@ -59,6 +62,7 @@ def run_job(stop_signal):
         
         while time.time() - wait_start < 8:
             raw_market, _ = ocr_rapid.scan_raw_object(detail_area)
+            # raw_market.vis(f"raw_market_{i}.png")
             market_texts = ocr_rapid.extract_texts_from_result(raw_market)
             
             is_loading = False

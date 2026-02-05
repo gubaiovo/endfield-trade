@@ -1,6 +1,6 @@
 GAME_WINDOW_TITLE = "Endfield"
 LOG = True
-DEBUG_MODE = False 
+DEBUG_MODE = True 
 
 TMP_DIR = "tmp"
 LOG_DIR = "logs"

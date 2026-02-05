@@ -123,6 +123,35 @@ wheels = [
 ]
 
 [[package]]
+name = "endfieldtrade"
+version = "2.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "customtkinter" },
+    { name = "keyboard" },
+    { name = "onnxruntime" },
+    { name = "openvino" },
+    { name = "pyautogui" },
+    { name = "pyinstaller" },
+    { name = "pywin32" },
+    { name = "rapidocr" },
+    { name = "wx-ocr" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "customtkinter", specifier = ">=5.2.2" },
+    { name = "keyboard", specifier = ">=0.13.5" },
+    { name = "onnxruntime", specifier = ">=1.23.2" },
+    { name = "openvino", specifier = ">=2025.4.1" },
+    { name = "pyautogui", specifier = ">=0.9.54" },
+    { name = "pyinstaller", specifier = ">=6.18.0" },
+    { name = "pywin32", specifier = ">=311" },
+    { name = "rapidocr", specifier = ">=3.6.0" },
+    { name = "wx-ocr", specifier = ">=0.1.6" },
+]
+
+[[package]]
 name = "flatbuffers"
 version = "25.12.19"
 source = { registry = "https://pypi.org/simple" }
@@ -245,35 +274,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/51/41/851c4b4082402d9ea860c3626db5d5df47164a712cb23b54be028b184c1c/numpy-2.3.5-cp314-cp314t-win32.whl", hash = "sha256:93eebbcf1aafdf7e2ddd44c2923e2672e1010bddc014138b229e49725b4d6be5", size = 6479806, upload-time = "2025-11-16T22:52:14.641Z" },
     { url = "https://files.pythonhosted.org/packages/90/30/d48bde1dfd93332fa557cff1972fbc039e055a52021fbef4c2c4b1eefd17/numpy-2.3.5-cp314-cp314t-win_amd64.whl", hash = "sha256:c8a9958e88b65c3b27e22ca2a076311636850b612d6bbfb76e8d156aacde2aaf", size = 13105760, upload-time = "2025-11-16T22:52:17.975Z" },
     { url = "https://files.pythonhosted.org/packages/2d/fd/4b5eb0b3e888d86aee4d198c23acec7d214baaf17ea93c1adec94c9518b9/numpy-2.3.5-cp314-cp314t-win_arm64.whl", hash = "sha256:6203fdf9f3dc5bdaed7319ad8698e685c7a3be10819f41d32a0723e611733b42", size = 10545459, upload-time = "2025-11-16T22:52:20.55Z" },
-]
-
-[[package]]
-name = "ocr-test"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "customtkinter" },
-    { name = "keyboard" },
-    { name = "onnxruntime" },
-    { name = "openvino" },
-    { name = "pyautogui" },
-    { name = "pyinstaller" },
-    { name = "pywin32" },
-    { name = "rapidocr" },
-    { name = "wx-ocr" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "customtkinter", specifier = ">=5.2.2" },
-    { name = "keyboard", specifier = ">=0.13.5" },
-    { name = "onnxruntime", specifier = ">=1.23.2" },
-    { name = "openvino", specifier = ">=2025.4.1" },
-    { name = "pyautogui", specifier = ">=0.9.54" },
-    { name = "pyinstaller", specifier = ">=6.18.0" },
-    { name = "pywin32", specifier = ">=311" },
-    { name = "rapidocr", specifier = ">=3.6.0" },
-    { name = "wx-ocr", specifier = ">=0.1.6" },
 ]
 
 [[package]]

@@ -34,11 +34,11 @@ def find_grid_items_with_names(region, suffix="货组"):
                     except: continue
     except Exception as e:
         log(f"WxOCR 扫描失败: {e}")
-    finally:
-        if os.path.exists(full_path) and not getattr(config, 'DEBUG_MODE', False):
-            try:
-                os.remove(full_path)
-            except: pass
+    # finally:
+    #     if os.path.exists(full_path) and not getattr(config, 'DEBUG_MODE', False):
+    #         try:
+    #             os.remove(full_path)
+    #         except: pass
 
     items_found.sort(key=lambda k: (k['pos'][1] // 50, k['pos'][0]))
     return items_found

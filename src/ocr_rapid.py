@@ -18,18 +18,14 @@ except Exception as e:
     engine = RapidOCR()
 
 def _parse_price(text):
-    if any(c in text for c in ['%', 'UID', ':', '+', '-']): 
-        return None
-    if '/' in text:
+    if any(c in text for c in ['%', 'UID', ':', '+', '-', '#', '/']): 
         return None
     clean_text = text.replace(',', '').strip()
     nums = re.findall(r'\d+', clean_text)
-    
     if nums:
         val = int(max(nums, key=len))
         if 100 <= val <= 10000:
             return val
-            
     return None
 
 def check_text_exists(keyword, region=None):

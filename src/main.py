@@ -245,33 +245,31 @@ class App(ctk.CTk):
                     messagebox.showerror("错误", f"地区 {key} 的数量必须是数字")
                     return
 
-            if not os.path.exists(CONFIG_PATH):
-                messagebox.showerror("错误", f"找不到配置文件: {CONFIG_PATH}")
-                return
-
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                content = f.read()
-
-            content = re.sub(r"LOG\s*=\s*(True|False)", f"LOG = {new_log_state}", content)
-            
-            dict_str = "REGION_DATA = {\n"
-            for k, v in current_data.items():
-                val_str = json.dumps(v, ensure_ascii=False)
-                dict_str += f'    "{k}": {val_str},\n'
-            dict_str += "}"
-            
-            content = re.sub(r"REGION_DATA\s*=\s*\{[\s\S]*?\}", dict_str, content)
-
-            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-                f.write(content)
-
             config.LOG = new_log_state
             config.REGION_DATA = current_data
+
+            region_data_str = json.dumps(config.REGION_DATA, ensure_ascii=False, indent=4)
+            
+            new_content = f'''# -*- coding: utf-8 -*-
+
+GAME_WINDOW_TITLE = "{getattr(config, 'GAME_WINDOW_TITLE', 'Endfield')}"
+LOG = {new_log_state}
+DEBUG_MODE = {getattr(config, 'DEBUG_MODE', False)}
+
+TMP_DIR = "{getattr(config, 'TMP_DIR', 'tmp')}"
+LOG_DIR = "{getattr(config, 'LOG_DIR', 'logs')}"
+
+# 地区配置
+REGION_DATA = {region_data_str}
+'''
+
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                f.write(new_content)
             
             utils.init_logger()
 
             messagebox.showinfo("成功", "设置已保存并生效")
-            self.append_console(f"配置更新完毕.")
+            self.append_console(f"配置已重写更新.")
 
         except Exception as e:
             messagebox.showerror("保存失败", str(e))

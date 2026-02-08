@@ -36,6 +36,7 @@ def run_job(stop_signal):
         gx, gy = item['pos']
 
         if not safe_move(gx, gy): return
+        log(f"\n正在扫描{name}, 位于 [{gx}, {gy}]")
         safe_click()
         time.sleep(0.8)
 
@@ -90,7 +91,7 @@ def run_job(stop_signal):
         log(f"[{i+1}] {name}: {my_price} -> {top_price} | 利润: {diff}")
         
         if my_price > 0 and top_price > 0:
-            results.append({"name": name, "diff": diff, "pos": (gx, gy)})
+            results.append({"name": name, "diff": diff, "pos": (gx, gy), "my_price": my_price, "top_price": top_price})
 
         pyautogui.press('esc')
         time.sleep(0.5) 
@@ -99,10 +100,10 @@ def run_job(stop_signal):
 
         if stop_signal(): return
 
-    log("<<< 扫描结束 >>>")
+    log("\n<<< 扫描结束 >>>")
     if results:
-        for result in results:
-            log(f"{result['name']}: {result['diff']}")
+        for idx, result in enumerate(results):
+            log(f"[{idx+1}] {result['name']}: 本价{result['my_price']} -> 好友最高{result['top_price']} | 利润: {result['diff']}")
             
         best = sorted(results, key=lambda x: x['diff'], reverse=True)[0]
         safe_move(*best['pos'])

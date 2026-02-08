@@ -38,7 +38,7 @@ jobs:
             Write-Host "wco_data copied."
           }
           if (Test-Path "config.py") {
-            Copy-Item -Path "config.py" -Destination "dist/EndfieldTrade" -Force
+            Copy-Item -Path "config.py" -Destination "dist/EndfieldTrade/_internal" -Force
             Write-Host "config.py copied."
           }
 

@@ -25,7 +25,7 @@ class App(ctk.CTk):
         super().__init__()
         try:
             importlib.reload(config)
-            print(f"配置已重载: \n{config.REGION_DATA}")
+            print(f"配置已重载: \n最大扫描数量{config.MAX_SCAN_COUNT}\n是否启用日志:{config.LOG}\n是否启用调试模式:{config.DEBUG_MODE}\n临时文件目录:{config.TMP_DIR}\n日志文件目录:{config.LOG_DIR}")
         except Exception as e:
             print(f"配置重载失败: {e}")
 
@@ -66,23 +66,20 @@ class App(ctk.CTk):
         self.home_text.insert("0.0", """【使用说明】
 
 1. 环境准备：
-   - 必须先运行根目录下的 run.py 启动。
+   - 以管理员身份运行程序
    - 游戏分辨率不做限制，推荐1920*1080
-   - 按"Y"打开地区建设 -> 物资调度 -> 弹性物资需求。
+   - 按"Y"打开地区建设 -> 物资调度 -> 弹性物资需求
 
 2. 运行逻辑：
    - 使用 wx-ocr 识别物资名称和位置。
    - 使用 RapidOCR 识别价格、点击按钮。
    - 使用 RapidOCR 等待数据加载、识别最高价，自动计算利润。
 
-3. 设置功能：
-   - 在“参数设置”页面可以调整各个地区的扫描数量。
-
-4. 快捷键：
+3. 快捷键：
    - [=] 键：开始
    - [-] 键：停止
    
-5. 注意：
+4. 注意：
    - 程序通过ocr进行识别，因此在部分情况下(如设备限制、网络波动等)会存在识别错误的情况
 """)
         self.home_text.configure(state="disabled")
@@ -125,40 +122,38 @@ class App(ctk.CTk):
         top_bar = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
         top_bar.pack(fill="x", padx=20, pady=10)
         
-        self.log_switch_var = ctk.StringVar(value="on" if config.LOG else "off")
-        self.log_switch = ctk.CTkSwitch(top_bar, text="启用日志记录 (写入文件)", 
+        self.log_switch_var = ctk.StringVar(value="on" if getattr(config, 'LOG', True) else "off")
+        self.log_switch = ctk.CTkSwitch(top_bar, text="启用日志记录", 
                                         variable=self.log_switch_var, onvalue="on", offvalue="off")
-        self.log_switch.pack(side="left")
+        self.log_switch.pack(side="left", padx=(0, 20))
+
+        self.debug_switch_var = ctk.StringVar(value="on" if getattr(config, 'DEBUG_MODE', False) else "off")
+        self.debug_switch = ctk.CTkSwitch(top_bar, text="调试模式", 
+                                          variable=self.debug_switch_var, onvalue="on", offvalue="off")
+        self.debug_switch.pack(side="left")
 
         self.btn_save = ctk.CTkButton(top_bar, text="保存设置并生效", fg_color="#E6A23C", text_color="black",
                                       command=self.save_config)
         self.btn_save.pack(side="right")
 
-        list_label = ctk.CTkLabel(self.settings_frame, text="地区扫描数量设置", font=("微软雅黑", 16, "bold"), anchor="w")
-        list_label.pack(fill="x", padx=20, pady=(10, 5))
+        setting_container = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
+        setting_container.pack(fill="x", padx=20, pady=20)
 
-        self.scroll_frame = ctk.CTkScrollableFrame(self.settings_frame, label_text="地区列表 (config.py)")
-        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=5)
+        lbl = ctk.CTkLabel(setting_container, text="单次扫描物品上限:", font=("微软雅黑", 14), width=150, anchor="w")
+        lbl.grid(row=0, column=0, padx=10, pady=10)
         
-        self.region_entries = {}
-
-        row = 0
-        for region_key, data in config.REGION_DATA.items():
-            lbl = ctk.CTkLabel(self.scroll_frame, text=f"{region_key}:", width=150, anchor="w")
-            lbl.grid(row=row, column=0, padx=10, pady=5)
-            
-            current_count = data if isinstance(data, int) else data.get("count", 0)
-            
-            entry = ctk.CTkEntry(self.scroll_frame, width=100)
-            entry.insert(0, str(current_count))
-            entry.grid(row=row, column=1, padx=10, pady=5)
-            
-            self.region_entries[region_key] = entry
-            row += 1
+        current_max = getattr(config, 'MAX_SCAN_COUNT', 12)
+        
+        self.max_scan_entry = ctk.CTkEntry(setting_container, width=100)
+        self.max_scan_entry.insert(0, str(current_max))
+        self.max_scan_entry.grid(row=0, column=1, padx=10, pady=10)
+        
+        desc = ctk.CTkLabel(setting_container, text="(扫描列表前 N 个物品后停止)", text_color="gray")
+        desc.grid(row=0, column=2, padx=10)
 
         bottom_bar = ctk.CTkFrame(self.settings_frame, fg_color="transparent") 
         bottom_bar.pack(fill="x", padx=20, pady=20)
-        note = ctk.CTkLabel(bottom_bar, text="注：OCR识别结果可能不准确", text_color="gray")
+        note = ctk.CTkLabel(bottom_bar, text="注：调试模式开启后，会在 tmp 文件夹下保存大量截图，请定期清理。", text_color="gray")
         note.pack()
 
     def select_frame_by_name(self, name):
@@ -235,37 +230,28 @@ class App(ctk.CTk):
     def save_config(self):
         try:
             new_log_state = True if self.log_switch_var.get() == "on" else False
-            
-            current_data = config.REGION_DATA.copy()
-            
-            for key, entry in self.region_entries.items():
-                try:
-                    new_count = int(entry.get())
-                    if key in current_data:
-                        if isinstance(current_data[key], dict):
-                            current_data[key]["count"] = new_count
-                        else:
-                            current_data[key] = {"count": new_count}
-                except ValueError:
-                    messagebox.showerror("错误", f"地区 {key} 的数量必须是数字")
-                    return
-
+            new_debug_state = True if self.debug_switch_var.get() == "on" else False
+            try:
+                new_max_count = int(self.max_scan_entry.get())
+                if new_max_count <= 0: raise ValueError
+            except ValueError:
+                messagebox.showerror("错误", "扫描上限必须是大于0的整数")
+                return
             config.LOG = new_log_state
-            config.REGION_DATA = current_data
+            config.DEBUG_MODE = new_debug_state
+            config.MAX_SCAN_COUNT = new_max_count
 
-            region_data_str = json.dumps(config.REGION_DATA, ensure_ascii=False, indent=4)
-            
             new_content = f'''# -*- coding: utf-8 -*-
 
 GAME_WINDOW_TITLE = "{getattr(config, 'GAME_WINDOW_TITLE', 'Endfield')}"
 LOG = {new_log_state}
-DEBUG_MODE = {getattr(config, 'DEBUG_MODE', False)}
+DEBUG_MODE = {new_debug_state}
 
 TMP_DIR = "{getattr(config, 'TMP_DIR', 'tmp')}"
 LOG_DIR = "{getattr(config, 'LOG_DIR', 'logs')}"
 
-# 地区配置
-REGION_DATA = {region_data_str}
+# 单次扫描物品数量上限
+MAX_SCAN_COUNT = {new_max_count}
 '''
 
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
@@ -274,7 +260,7 @@ REGION_DATA = {region_data_str}
             utils.init_logger()
 
             messagebox.showinfo("成功", "设置已保存并生效")
-            self.append_console(f"配置已重写更新.")
+            self.append_console(f"配置已更新: 上限{new_max_count}, 调试{'开' if new_debug_state else '关'}")
 
         except Exception as e:
             messagebox.showerror("保存失败", str(e))

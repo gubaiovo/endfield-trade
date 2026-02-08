@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
+
 GAME_WINDOW_TITLE = "Endfield"
 LOG = True
-DEBUG_MODE = True 
+DEBUG_MODE = True
 
 TMP_DIR = "tmp"
 LOG_DIR = "logs"
-# 地区配置
-REGION_DATA = {
-    "四号谷地": {"count": 12},
-    "武陵":    {"count": 4},
-}
+
+# 单次扫描物品数量上限
+MAX_SCAN_COUNT = 1

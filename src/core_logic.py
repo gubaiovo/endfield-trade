@@ -16,7 +16,7 @@ def run_job(stop_signal):
     win_x, win_y, win_w, win_h = rect
 
     grid_area = (win_x, win_y + 150, win_w, win_h - 200)
-    max_count = config.REGION_DATA["四号谷地"]["count"]
+    max_count = getattr(config, 'MAX_SCAN_COUNT', 12)
     
     log("正在获取物资列表...")
     items_data = ocr_wx.find_grid_items_with_names(grid_area, suffix="货组")

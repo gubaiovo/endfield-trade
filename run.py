@@ -10,7 +10,7 @@ else:
 
 SRC_DIR = os.path.join(ROOT_DIR, "src")
 
-sys.path.append(ROOT_DIR)
+sys.path.insert(0, ROOT_DIR)
 sys.path.append(SRC_DIR)
 
 def show_error(msg):

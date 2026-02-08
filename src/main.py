@@ -8,7 +8,7 @@ import threading
 from tkinter import messagebox
 from datetime import datetime
 import keyboard
-
+import importlib
 import config
 import utils
 import core_logic
@@ -23,6 +23,11 @@ LOG_DIR = os.path.join(ROOT_DIR, "logs")
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+        try:
+            importlib.reload(config)
+            print(f"配置已重载: \n{config.REGION_DATA}")
+        except Exception as e:
+            print(f"配置重载失败: {e}")
 
         self.title("终末地倒货助手")
         self.geometry("950x700")
